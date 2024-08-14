@@ -1,6 +1,7 @@
 // Carregando Módulos
 require("dotenv").config();
 const express = require("express");
+const exphbs = require("express-handlebars");
 const handlebars = require("express-handlebars");
 const mongoose = require("mongoose");
 const app = express();
@@ -49,8 +50,9 @@ app.use((req, res, next) => {
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json({ limit: "50mb" }));
 // Handlebars
-app.engine("handlebars", handlebars.engine({ defaultLayout: "main" }));
+app.engine("handlebars", exphbs());
 app.set("view engine", "handlebars");
+app.set("views", path.join(__dirname, "views"));
 // Mongoose
 mongoose.Promise = global.Promise;
 mongoose
@@ -72,7 +74,7 @@ app.get("/", (req, res) => {
     .populate("categoria")
     .sort({ data: "desc" })
     .then((postagens) => {
-      res.render("index.handlebars", { postagens: postagens });
+      res.render("index", { postagens: postagens });
     })
     .catch((err) => {
       req.flash("error_msg", "Houve um erro interno");
