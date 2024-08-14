@@ -1,4 +1,5 @@
 // Carregando Módulos
+require("dotenv").config();
 const express = require("express");
 const handlebars = require("express-handlebars");
 const mongoose = require("mongoose");
@@ -15,11 +16,18 @@ require("./models/Categoria");
 const Categoria = mongoose.model("categorias");
 require("./config/auth")(passport);
 const db = require("./config/db");
+var MongoDBStore = require("connect-mongodb-session")(session);
 // Configurações
 // Sessão
+
+const store = new MongoDBStore({
+  uri: `mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}@cluster0.advpt.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`,
+  collection: "mySessions",
+});
 app.use(
   session({
     secret: "cursodenode",
+    store: store,
     resave: true,
     saveUninitialized: true,
   })
@@ -39,14 +47,16 @@ app.use((req, res, next) => {
 });
 // "Express"-parser
 app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
+app.use(express.json({ limit: "50mb" }));
 // Handlebars
 app.engine("handlebars", handlebars.engine({ defaultLayout: "main" }));
 app.set("view engine", "handlebars");
 // Mongoose
 mongoose.Promise = global.Promise;
 mongoose
-  .connect(db.mongoURI)
+  .connect(
+    `mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}@cluster0.advpt.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`
+  )
   .then(() => {
     console.log("Conectado com sucesso!");
   })
@@ -55,10 +65,6 @@ mongoose
   });
 // Public
 app.use(express.static(path.join(__dirname, "public")));
-
-app.use((req, res, next) => {
-  next();
-});
 // Rotas
 app.get("/", (req, res) => {
   Postagem.find()
